@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f7f7f7;
+  color: #111;
+}
+.screen {
+  padding: 16px;
+}
+h1, h2, h3 {
+  margin-top: 0;
+}
+button {
+  width: 100%;
+  padding: 14px;
+  margin: 6px 0;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+}
+.pass { background: #2ecc71; color: #fff; }
+.advisory { background: #3498db; color: #fff; }
+.minor { background: #f1c40f; }
+.major { background: #e67e22; color: #fff; }
+.dangerous { background: #e74c3c; color: #fff; }
+.nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.requirements li {
+  margin-bottom: 6px;
+}
