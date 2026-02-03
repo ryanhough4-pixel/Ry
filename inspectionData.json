@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "source": "Final paper PG14 + DVSA HGV MOT Inspection Manual",
+    "purpose": "Training tool",
+    "version": "1.0"
+  },
+  "vehicleTypes": [
+    "HGV",
+    "TRAILER"
+  ],
+  "stages": [
+    {
+      "stage": "A",
+      "title": "Inside vehicle / cab / documentation",
+      "items": [
+        {
+          "im": "IM1",
+          "title": "Registration plates",
+          "appliesTo": [
+            "HGV",
+            "TRAILER"
+          ],
+          "inspect": [
+            "Registration plate fitted where required",
+            "Characters legible and correctly spaced",
+            "Plate secure and not obscured"
+          ],
+          "failures": [
+            "Missing registration plate",
+            "Illegible characters",
+            "Incorrect spacing or font",
+            "Plate insecure or obscured"
+          ]
+        },
+        {
+          "im": "IM2",
+          "title": "Vehicle Identification Number (VIN)",
+          "appliesTo": [
+            "HGV",
+            "TRAILER"
+          ],
+          "inspect": [
+            "VIN present and legible",
+            "VIN matches plating certificate or records",
+            "No evidence of tampering"
+          ],
+          "failures": [
+            "VIN missing",
+            "VIN illegible",
+            "VIN does not match records",
+            "Evidence of tampering"
+          ]
+        },
+        {
+          "im": "IM3",
+          "title": "Manufacturer’s plate / plating details",
+          "appliesTo": [
+            "HGV",
+            "TRAILER"
+          ],
+          "inspect": [
+            "Plate present and secure",
+            "Details legible",
+            "Axle weights and GTW shown correctly"
+          ],
+          "failures": [
+            "Plate missing",
+            "Plate illegible",
+            "Incorrect or incomplete details"
+          ]
+        }
+      ]
+    }
+  ]
+}
