@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', () => {
 let inspectionData = null;
 
 fetch('inspectionData.json')
@@ -115,3 +116,4 @@ function renderSummary() {
 }
 
 
+});
