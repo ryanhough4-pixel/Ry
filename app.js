@@ -6,11 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let state = {
     vehicleType: null,
-    severity: null,
-    note: ''
+    currentStage: 'A',
+    currentIM: null,
+    results: {} // im -> { severity, note }
   };
 
-  // LOAD INSPECTION DATA
   fetch('inspectionData.json')
     .then(res => res.json())
     .then(data => {
@@ -21,32 +21,58 @@ document.addEventListener('DOMContentLoaded', () => {
       app.innerHTML = '<p style="padding:20px">Failed to load inspection data</p>';
     });
 
-  // START SCREEN
+  /* ---------- SCREENS ---------- */
+
   function renderStart() {
     app.innerHTML = `
       <div class="screen">
         <h1>DVSA HGV Walkaround</h1>
-        <h3>Select vehicle type</h3>
+        <p class="subtitle">Training Inspection Tool</p>
         <button onclick="selectVehicle('HGV')">HGV</button>
         <button onclick="selectVehicle('TRAILER')">Trailer</button>
       </div>
     `;
   }
 
-  // VEHICLE SELECT
   function selectVehicle(type) {
     state.vehicleType = type;
-    renderInspection();
+    renderStage();
   }
 
-  // INSPECTION SCREEN (FIRST IM ONLY – SAFE TEST)
-  function renderInspection() {
-    const stage = inspectionData.stages[0];
-    const item = stage.items.find(i =>
+  function renderStage() {
+    const stage = inspectionData.stages.find(s => s.stage === state.currentStage);
+    const items = stage.items.filter(i =>
       i.appliesTo.includes(state.vehicleType)
     );
 
     app.innerHTML = `
+      ${renderTabs()}
+      <div class="screen">
+        <h2>Stage ${stage.stage} – ${stage.title}</h2>
+        <ul class="im-list">
+          ${items.map(item => `
+            <li onclick="openIM('${item.im}')">
+              <span>${item.im} – ${item.title}</span>
+              <span class="status ${getStatus(item.im)}">${getStatusIcon(item.im)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  function openIM(im) {
+    const stage = inspectionData.stages.find(s => s.stage === state.currentStage);
+    state.currentIM = stage.items.find(i => i.im === im);
+    renderIM();
+  }
+
+  function renderIM() {
+    const item = state.currentIM;
+    const existing = state.results[item.im] || {};
+
+    app.innerHTML = `
+      ${renderTabs()}
       <div class="screen">
         <h2>${item.im} – ${item.title}</h2>
 
@@ -54,58 +80,87 @@ document.addEventListener('DOMContentLoaded', () => {
           ${item.inspect.map(r => `<li>${r}</li>`).join('')}
         </ul>
 
-        <button onclick="setSeverity('pass')">Pass</button>
-        <button onclick="setSeverity('advisory')">Advisory</button>
-        <button onclick="setSeverity('minor')">Minor</button>
-        <button onclick="setSeverity('major')">Major</button>
-        <button onclick="setSeverity('dangerous')">Dangerous*</button>
+        <div class="severity">
+          ${renderSeverityButton('pass', existing.severity)}
+          ${renderSeverityButton('advisory', existing.severity)}
+          ${renderSeverityButton('minor', existing.severity)}
+          ${renderSeverityButton('major', existing.severity)}
+          ${renderSeverityButton('dangerous', existing.severity)}
+        </div>
 
-        <div id="evidence"></div>
+        <div id="evidence">
+          ${existing.note ? `<textarea>${existing.note}</textarea>` : ''}
+        </div>
 
-        <button style="margin-top:20px" onclick="renderSummary()">Next</button>
+        <button class="secondary" onclick="renderStage()">Back to stage</button>
       </div>
     `;
   }
 
-  // SEVERITY HANDLING
-  function setSeverity(level) {
-    state.severity = level;
-    const evidence = document.getElementById('evidence');
+  /* ---------- HELPERS ---------- */
 
-    if (['minor', 'major', 'dangerous'].includes(level)) {
+  function setSeverity(level) {
+    const im = state.currentIM.im;
+    state.results[im] = { severity: level, note: '' };
+
+    const evidence = document.getElementById('evidence');
+    if (['minor','major','dangerous'].includes(level)) {
       evidence.innerHTML = `
         <label>Reason for failure</label>
-        <textarea
-          placeholder="Record the reason for failure"
-          oninput="state.note=this.value"></textarea>
+        <textarea oninput="saveNote(this.value)"></textarea>
       `;
     } else {
-      state.note = '';
       evidence.innerHTML = '';
     }
+    renderIM();
   }
 
-  // SUMMARY
-  function renderSummary() {
-    if (['minor', 'major', 'dangerous'].includes(state.severity) && !state.note) {
-      alert('Reason for failure required');
-      return;
-    }
+  function saveNote(text) {
+    state.results[state.currentIM.im].note = text;
+  }
 
-    app.innerHTML = `
-      <div class="screen">
-        <h2>Summary</h2>
-        <p><strong>Vehicle:</strong> ${state.vehicleType}</p>
-        <p><strong>Outcome:</strong> ${state.severity}</p>
-        <p><strong>Reason:</strong> ${state.note || 'N/A'}</p>
-        <button onclick="renderStart()">Start Again</button>
+  function renderTabs() {
+    return `
+      <div class="tabs">
+        ${['A','B','C','D'].map(s =>
+          `<button class="${state.currentStage===s?'active':''}"
+            onclick="switchStage('${s}')">Stage ${s}</button>`
+        ).join('')}
       </div>
     `;
   }
 
-  // EXPOSE FUNCTIONS FOR BUTTONS
+  function switchStage(stage) {
+    state.currentStage = stage;
+    renderStage();
+  }
+
+  function renderSeverityButton(level, current) {
+    return `
+      <button class="sev ${level} ${current===level?'active':''}"
+        onclick="setSeverity('${level}')">
+        ${level.toUpperCase()}
+      </button>
+    `;
+  }
+
+  function getStatus(im) {
+    return state.results[im]?.severity || 'pending';
+  }
+
+  function getStatusIcon(im) {
+    const s = getStatus(im);
+    if (s === 'pass') return '✅';
+    if (s === 'advisory') return '⚠️';
+    if (s === 'pending') return '⏳';
+    return '❌';
+  }
+
+  /* ---------- EXPOSE ---------- */
   window.selectVehicle = selectVehicle;
+  window.openIM = openIM;
+  window.switchStage = switchStage;
   window.setSeverity = setSeverity;
-  window.renderSummary = renderSummary;
+  window.saveNote = saveNote;
 
 });
