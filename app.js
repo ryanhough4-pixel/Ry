@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     note: ''
   };
 
+  // LOAD INSPECTION DATA
   fetch('inspectionData.json')
     .then(res => res.json())
     .then(data => {
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
       app.innerHTML = '<p style="padding:20px">Failed to load inspection data</p>';
     });
 
+  // START SCREEN
   function renderStart() {
     app.innerHTML = `
       <div class="screen">
@@ -31,14 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
+  // VEHICLE SELECT
   function selectVehicle(type) {
     state.vehicleType = type;
     renderInspection();
   }
 
+  // INSPECTION SCREEN (FIRST IM ONLY – SAFE TEST)
   function renderInspection() {
     const stage = inspectionData.stages[0];
-    const item = stage.items.find(i => i.appliesTo.includes(state.vehicleType));
+    const item = stage.items.find(i =>
+      i.appliesTo.includes(state.vehicleType)
+    );
 
     app.innerHTML = `
       <div class="screen">
@@ -61,11 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
+  // SEVERITY HANDLING
   function setSeverity(level) {
     state.severity = level;
     const evidence = document.getElementById('evidence');
 
-    if (['minor','major','dangerous'].includes(level)) {
+    if (['minor', 'major', 'dangerous'].includes(level)) {
       evidence.innerHTML = `
         <label>Reason for failure</label>
         <textarea
@@ -78,8 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // SUMMARY
   function renderSummary() {
-    if (['minor','major','dangerous'].includes(state.severity) && !state.note) {
+    if (['minor', 'major', 'dangerous'].includes(state.severity) && !state.note) {
       alert('Reason for failure required');
       return;
     }
@@ -88,12 +96,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="screen">
         <h2>Summary</h2>
         <p><strong>Vehicle:</strong> ${state.vehicleType}</p>
-        <p><strong>IM:</strong> Recorded</p>
         <p><strong>Outcome:</strong> ${state.severity}</p>
         <p><strong>Reason:</strong> ${state.note || 'N/A'}</p>
         <button onclick="renderStart()">Start Again</button>
       </div>
     `;
   }
+
+  // EXPOSE FUNCTIONS FOR BUTTONS
+  window.selectVehicle = selectVehicle;
+  window.setSeverity = setSeverity;
+  window.renderSummary = renderSummary;
 
 });
