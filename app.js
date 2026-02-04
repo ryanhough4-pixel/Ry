@@ -1,166 +1,181 @@
-document.addEventListener('DOMContentLoaded', () => {
+:root {
+  --gov-blue: #005ea5;
+  --gov-blue-dark: #003a8f;
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --text: #0b0c0c;
+  --muted: #6f777b;
+  --border: #d8dde0;
 
-  const app = document.getElementById('app');
+  --pass: #00703c;
+  --advisory: #f59f00;
+  --minor: #f08c00;
+  --major: #d4351c;
+  --dangerous: #942514;
+}
 
-  let inspectionData = null;
+* {
+  box-sizing: border-box;
+}
 
-  let state = {
-    vehicleType: null,
-    currentStage: 'A',
-    currentIM: null,
-    results: {} // im -> { severity, note }
-  };
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+}
 
-  fetch('inspectionData.json')
-    .then(res => res.json())
-    .then(data => {
-      inspectionData = data;
-      renderStart();
-    })
-    .catch(() => {
-      app.innerHTML = '<p style="padding:20px">Failed to load inspection data</p>';
-    });
+/* ---------- TOP TABS ---------- */
 
-  /* ---------- SCREENS ---------- */
+.tabs {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
 
-  function renderStart() {
-    app.innerHTML = `
-      <div class="screen">
-        <h1>DVSA HGV Walkaround</h1>
-        <p class="subtitle">Training Inspection Tool</p>
-        <button onclick="selectVehicle('HGV')">HGV</button>
-        <button onclick="selectVehicle('TRAILER')">Trailer</button>
-      </div>
-    `;
-  }
+.tabs button {
+  flex: 1;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
 
-  function selectVehicle(type) {
-    state.vehicleType = type;
-    renderStage();
-  }
+.tabs button.active {
+  color: var(--gov-blue);
+  border-bottom: 3px solid var(--gov-blue);
+}
 
-  function renderStage() {
-    const stage = inspectionData.stages.find(s => s.stage === state.currentStage);
-    const items = stage.items.filter(i =>
-      i.appliesTo.includes(state.vehicleType)
-    );
+/* ---------- SCREENS ---------- */
 
-    app.innerHTML = `
-      ${renderTabs()}
-      <div class="screen">
-        <h2>Stage ${stage.stage} – ${stage.title}</h2>
-        <ul class="im-list">
-          ${items.map(item => `
-            <li onclick="openIM('${item.im}')">
-              <span>${item.im} – ${item.title}</span>
-              <span class="status ${getStatus(item.im)}">${getStatusIcon(item.im)}</span>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  }
+.screen {
+  padding: 16px;
+}
 
-  function openIM(im) {
-    const stage = inspectionData.stages.find(s => s.stage === state.currentStage);
-    state.currentIM = stage.items.find(i => i.im === im);
-    renderIM();
-  }
+h1 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
 
-  function renderIM() {
-    const item = state.currentIM;
-    const existing = state.results[item.im] || {};
+h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
 
-    app.innerHTML = `
-      ${renderTabs()}
-      <div class="screen">
-        <h2>${item.im} – ${item.title}</h2>
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
 
-        <ul class="requirements">
-          ${item.inspect.map(r => `<li>${r}</li>`).join('')}
-        </ul>
+/* ---------- BUTTONS ---------- */
 
-        <div class="severity">
-          ${renderSeverityButton('pass', existing.severity)}
-          ${renderSeverityButton('advisory', existing.severity)}
-          ${renderSeverityButton('minor', existing.severity)}
-          ${renderSeverityButton('major', existing.severity)}
-          ${renderSeverityButton('dangerous', existing.severity)}
-        </div>
+button {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  background: var(--gov-blue);
+  color: white;
+}
 
-        <div id="evidence">
-          ${existing.note ? `<textarea>${existing.note}</textarea>` : ''}
-        </div>
+button:active {
+  background: var(--gov-blue-dark);
+}
 
-        <button class="secondary" onclick="renderStage()">Back to stage</button>
-      </div>
-    `;
-  }
+button.secondary {
+  background: #505a5f;
+}
 
-  /* ---------- HELPERS ---------- */
+/* ---------- IM LIST ---------- */
 
-  function setSeverity(level) {
-    const im = state.currentIM.im;
-    state.results[im] = { severity: level, note: '' };
+.im-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-    const evidence = document.getElementById('evidence');
-    if (['minor','major','dangerous'].includes(level)) {
-      evidence.innerHTML = `
-        <label>Reason for failure</label>
-        <textarea oninput="saveNote(this.value)"></textarea>
-      `;
-    } else {
-      evidence.innerHTML = '';
-    }
-    renderIM();
-  }
+.im-list li {
+  background: var(--card);
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  border-left: 6px solid var(--border);
+}
 
-  function saveNote(text) {
-    state.results[state.currentIM.im].note = text;
-  }
+.im-list li:hover {
+  background: #f0f4f8;
+}
 
-  function renderTabs() {
-    return `
-      <div class="tabs">
-        ${['A','B','C','D'].map(s =>
-          `<button class="${state.currentStage===s?'active':''}"
-            onclick="switchStage('${s}')">Stage ${s}</button>`
-        ).join('')}
-      </div>
-    `;
-  }
+/* Status colours */
+.status.pending { color: var(--muted); }
+.status.pass { color: var(--pass); }
+.status.advisory { color: var(--advisory); }
+.status.minor,
+.status.major,
+.status.dangerous { color: var(--major); }
 
-  function switchStage(stage) {
-    state.currentStage = stage;
-    renderStage();
-  }
+/* ---------- CARDS ---------- */
 
-  function renderSeverityButton(level, current) {
-    return `
-      <button class="sev ${level} ${current===level?'active':''}"
-        onclick="setSeverity('${level}')">
-        ${level.toUpperCase()}
-      </button>
-    `;
-  }
+.requirements {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
 
-  function getStatus(im) {
-    return state.results[im]?.severity || 'pending';
-  }
+.requirements li {
+  margin-bottom: 8px;
+}
 
-  function getStatusIcon(im) {
-    const s = getStatus(im);
-    if (s === 'pass') return '✅';
-    if (s === 'advisory') return '⚠️';
-    if (s === 'pending') return '⏳';
-    return '❌';
-  }
+/* ---------- SEVERITY ---------- */
 
-  /* ---------- EXPOSE ---------- */
-  window.selectVehicle = selectVehicle;
-  window.openIM = openIM;
-  window.switchStage = switchStage;
-  window.setSeverity = setSeverity;
-  window.saveNote = saveNote;
+.severity {
+  margin-bottom: 16px;
+}
 
-});
+.sev {
+  border-radius: 14px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.sev.pass { background: var(--pass); }
+.sev.advisory { background: var(--advisory); }
+.sev.minor { background: var(--minor); }
+.sev.major { background: var(--major); }
+.sev.dangerous { background: var(--dangerous); }
+
+.sev.active {
+  outline: 3px solid rgba(0,0,0,0.15);
+}
+
+/* ---------- TEXTAREA ---------- */
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-top: 8px;
+  min-height: 90px;
+}
+
+/* ---------- SUMMARY ---------- */
+
+p {
+  margin-bottom: 8px;
+}
